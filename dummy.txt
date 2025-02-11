@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Calendar</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        table { width: 90%; margin: 20px auto; border-collapse: collapse; }
+        th, td { border: 1px solid black; padding: 10px; text-align: center; }
+        th { background-color: #f2f2f2; }
+        .month-row { font-weight: bold; background-color: lightblue; text-align: center; }
+        .holiday { background-color: red; color: white; }
+        .empty { background-color: #f9f9f9; }
+        .buttons { margin-top: 20px; }
+        .buttons button { margin: 5px; padding: 10px 20px; font-size: 16px; }
+    </style>
+</head>
+<body>  
+
+    <h2>Academic Calendar</h2>
+
+    <form onsubmit="generateTable(); return false;">
+        <label>Academic Start Date:</label>
+        <input type="date" id="startDate" value="2024-06-01" required>
+
+        <label>Academic End Date:</label>
+        <input type="date" id="endDate" value="2025-05-31" required>
+
+        <br><br>
+
+        <label>Dussehra Start Date:</label>
+        <input type="date" id="dussehraStart" value="2024-10-10">
+        
+        <label>Dussehra End Date:</label>
+        <input type="date" id="dussehraEnd" value="2024-10-14">
+
+        <br><br>
+
+        <label>Pongal Start Date:</label>
+        <input type="date" id="pongalStart" value="2025-01-13">
+        
+        <label>Pongal End Date:</label>
+        <input type="date" id="pongalEnd" value="2025-01-16">
+
+        <br><br>
+
+        <label>Other Local Holidays (DD/MM/YYYY, comma-separated):</label>
+        <input type="text" id="localHolidays" value="15/08/2024,02/10/2024,01/01/2025,26/01/2025">
+
+        <br><br>
+        <button type="submit">Generate Calendar</button>
+    </form>
+
+    <table id="calendar">
+        <thead>
+            <tr>
+                <th>Week No</th>
+                <th>Working Days</th>
+                <th>Sunday</th>
+                <th>Monday</th>
+                <th>Tuesday</th>
+                <th>Wednesday</th>
+                <th>Thursday</th>
+                <th>Friday</th>
+                <th>Saturday</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <div class="buttons">
+        <button onclick="countWorkingDays()">Count Working Days</button>
+        <button onclick="downloadExcel()">Download as Excel</button>
+    </div>
+
+    <script>
+        function generateTable() {
+            const startDate = new Date(document.getElementById("startDate").value);
+            const endDate = new Date(document.getElementById("endDate").value);
+
+            const dussehraStart = new Date(document.getElementById("dussehraStart").value);
+            const dussehraEnd = new Date(document.getElementById("dussehraEnd").value);
+            const pongalStart = new Date(document.getElementById("pongalStart").value);
+            const pongalEnd = new Date(document.getElementById("pongalEnd").value);
+
+            const localHolidays = getHolidayDates("localHolidays");
+
+            const allHolidays = new Set([...localHolidays]);
+            addDateRangeToSet(dussehraStart, dussehraEnd, allHolidays);
+            addDateRangeToSet(pongalStart, pongalEnd, allHolidays);
+
+            const tableBody = document.querySelector("#calendar tbody");
+            tableBody.innerHTML = "";
+
+            let currentDate = new Date(startDate);
+            let currentMonth = currentDate.getMonth();
+            let firstDayOfWeek = currentDate.getDay();
+            let weekNo = 1;
+
+            let monthRow = document.createElement("tr");
+            let monthCell = document.createElement("td");
+            monthCell.colSpan = 9;
+            monthCell.textContent = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+            monthCell.classList.add("month-row");
+            monthRow.appendChild(monthCell);
+            tableBody.appendChild(monthRow);
+
+            let row = document.createElement("tr");
+            let weekCell = document.createElement("td");
+            weekCell.textContent = weekNo;
+            row.appendChild(weekCell);
+
+            let workingDaysCell = document.createElement("td");
+            let workingDaysCount = 0;
+            row.appendChild(workingDaysCell);
+
+            for (let i = 0; i < firstDayOfWeek; i++) {
+                let emptyCell = document.createElement("td");
+                emptyCell.classList.add("empty");
+                row.appendChild(emptyCell);
+            }
+
+            while (currentDate <= endDate) {
+                let dayOfWeek = currentDate.getDay();
+                let dateKey = formatDate(currentDate);
+
+                if (currentDate.getDate() === 1 && currentDate.getMonth() !== currentMonth) {
+                    workingDaysCell.textContent = workingDaysCount;
+                    tableBody.appendChild(row);
+
+                    row = document.createElement("tr");
+
+                    let newMonthRow = document.createElement("tr");
+                    let newMonthCell = document.createElement("td");
+                    newMonthCell.colSpan = 9;
+                    newMonthCell.textContent = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+                    newMonthCell.classList.add("month-row");
+                    newMonthRow.appendChild(newMonthCell);
+                    tableBody.appendChild(newMonthRow);
+
+                    weekNo++;
+                    weekCell = document.createElement("td");
+                    weekCell.textContent = weekNo;
+                    row.appendChild(weekCell);
+
+                    workingDaysCell = document.createElement("td");
+                    workingDaysCount = 0;
+                    row.appendChild(workingDaysCell);
+
+                    let newMonthStartDay = currentDate.getDay();
+                    for (let i = 0; i < newMonthStartDay; i++) {
+                        let emptyCell = document.createElement("td");
+                        emptyCell.classList.add("empty");
+                        row.appendChild(emptyCell);
+                    }
+
+                    currentMonth = currentDate.getMonth();
+                }
+
+                let cell = document.createElement("td");
+                cell.textContent = currentDate.getDate();
+
+                if (allHolidays.has(dateKey) || dayOfWeek === 0 || isSecondSaturday(currentDate)) {
+                    cell.classList.add("holiday");
+                } else {
+                    workingDaysCount++;
+                }
+
+                row.appendChild(cell);
+
+                if (dayOfWeek === 6) {
+                    workingDaysCell.textContent = workingDaysCount;
+                    tableBody.appendChild(row);
+
+                    weekNo++;
+                    row = document.createElement("tr");
+                    weekCell = document.createElement("td");
+                    weekCell.textContent = weekNo;
+                    row.appendChild(weekCell);
+
+                    workingDaysCell = document.createElement("td");
+                    workingDaysCount = 0;
+                    row.appendChild(workingDaysCell);
+                }
+
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            workingDaysCell.textContent = workingDaysCount;
+            tableBody.appendChild(row);
+        }
+
+        function getHolidayDates(inputId) {
+            let input = document.getElementById(inputId).value;
+            return new Set(input.split(',').map(date => date.trim()).filter(date => date !== ""));
+        }
+
+        function addDateRangeToSet(start, end, set) {
+            while (start <= end) {
+                set.add(formatDate(start));
+                start.setDate(start.getDate() + 1);
+            }
+        }
+
+        function isSecondSaturday(date) {
+            return date.getDay() === 6 && Math.ceil(date.getDate() / 7) === 2;
+        }
+
+        function formatDate(date) {
+            return date.toLocaleDateString('en-GB').split('/').join('/');
+        }
+
+        // Function to count total working days
+        function countWorkingDays() {
+            const workingDaysCells = document.querySelectorAll("#calendar tbody td:nth-child(2)");
+            let totalWorkingDays = 0;
+            workingDaysCells.forEach(cell => {
+                totalWorkingDays += parseInt(cell.textContent) || 0;
+            });
+            alert(`Total Working Days: ${totalWorkingDays}`);
+        }
+
+        // Function to download the table as Excel
+        function downloadExcel() {
+            const table = document.getElementById("calendar");
+            const html = table.outerHTML;
+            const blob = new Blob([html], { type: "application/vnd.ms-excel" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "Academic_Calendar.xls";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+
+</body>
+</html> 
