@@ -7,10 +7,10 @@ body {
     text-align: center;
 }
 
-
 /* Table Styling */
 table {
-    width: 90%;
+    width: 100%;
+    max-width: 90%;
     margin: 20px auto;
     border-collapse: collapse;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -33,7 +33,6 @@ th {
     font-weight: bold;
     background-color: #e3f2fd;
     color: #1976d2;
-    text-align: center;
 }
 
 .holiday {
@@ -47,12 +46,14 @@ th {
 
 /* Button Styling */
 .buttons {
-    margin-top: 30px;
-    text-align: center;
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 15px;
 }
 
 .buttons button {
-    margin: 10px;
     padding: 12px 24px;
     font-size: 16px;
     color: white;
@@ -73,8 +74,11 @@ form {
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    max-width: 700px; /* Increased width for better spacing */
+    max-width: 600px;
     margin: 20px auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
 /* Grouping two fields in one row */
@@ -83,15 +87,14 @@ form {
     align-items: center;
     justify-content: space-between;
     gap: 15px;
-    margin-bottom: 15px;
 }
 
 /* Styling for labels */
 form label {
-    width: 150px; /* Fixed width for alignment */
+    min-width: 140px;
     font-weight: bold;
     color: #444;
-    text-align: right; /* Right-align labels */
+    text-align: right;
 }
 
 /* Styling for input fields */
@@ -99,7 +102,7 @@ form input[type="date"],
 form input[type="text"],
 form input[type="file"],
 form select {
-    flex: 1; /* Inputs take remaining space */
+    flex: 1;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -112,7 +115,7 @@ form select:focus {
     outline: none;
 }
 
-/* Submit Button Centering */
+/* Submit Button */
 form button {
     background-color: #4CAF50;
     color: white;
@@ -121,15 +124,13 @@ form button {
     border-radius: 5px;
     cursor: pointer;
     font-size: 16px;
-    display: block;
-    margin: 0 auto;
     transition: background-color 0.3s ease;
 }
 
 form button:hover {
     background-color: #45a049;
 }
-/* Help Section Container */
+
 /* Help Section */
 .help-section {
     width: 60%;
@@ -143,6 +144,7 @@ form button:hover {
 .help-header {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     cursor: pointer;
     background-color: #007bff;
     color: white;
@@ -158,21 +160,59 @@ form button:hover {
     display: none;
     padding: 15px;
 }
+
 .help-content ol {
-    padding-left: 30px; /* Ensures consistent left spacing */
-    margin-left: 0; /* Reset any previous left margin */
+    padding-left: 30px;
 }
 
 .help-content li {
-    display: list-item; /* Ensures it behaves like a proper list */
-    text-align: left; /* Aligns text properly */
-    margin-bottom: 10px; /* Ensures spacing between steps */
+    text-align: left;
+    margin-bottom: 10px;
 }
 
-
 /* Responsive Design */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
+    table {
+        max-width: 95%;
+    }
+
+    form {
+        max-width: 90%;
+    }
+
     .help-section {
-        width: 90%;
+        width: 80%;
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+
+    table {
+        font-size: 14px;
+    }
+
+    th, td {
+        padding: 8px;
+    }
+
+    .form-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    form label {
+        text-align: left;
+    }
+
+    .buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .help-section {
+        width: 95%;
     }
 }
