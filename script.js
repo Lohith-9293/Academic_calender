@@ -1,3 +1,36 @@
+let localHolidaysFromExcel = new Set();
+
+// Function to read the uploaded Excel file
+function readExcelFile(file) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+        // Assuming the dates are in the first column of the Excel sheet in dd/mm/yyyy format
+        localHolidaysFromExcel = new Set(json.map(row => {
+            const dateStr = row[0]; // Get the date string from the first column
+            if (dateStr && typeof dateStr === 'string') {
+                const [day, month, year] = dateStr.split('/'); // Split into day, month, year
+                return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`; // Convert to yyyy-mm-dd format
+            }
+            return null;
+        }).filter(date => date)); // Filter out invalid dates
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+// Event listener for file input
+document.getElementById('localHolidaysFile').addEventListener('change', function (e) {
+    const file = e.target.files[0];
+    if (file) {
+        readExcelFile(file);
+    }
+});
+
 function generateTable() {
     const startDate = new Date(document.getElementById("startDate").value);
     const endDate = new Date(document.getElementById("endDate").value);
@@ -7,9 +40,7 @@ function generateTable() {
     const pongalStart = new Date(document.getElementById("pongalStart").value);
     const pongalEnd = new Date(document.getElementById("pongalEnd").value);
 
-    const localHolidays = getHolidayDates("localHolidays");
-
-    const allHolidays = new Set([...localHolidays]);
+    const allHolidays = new Set([...localHolidaysFromExcel]);
     addDateRangeToSet(dussehraStart, dussehraEnd, allHolidays);
     addDateRangeToSet(pongalStart, pongalEnd, allHolidays);
 
@@ -48,7 +79,7 @@ function generateTable() {
 
     while (currentDate <= endDate) {
         let dayOfWeek = currentDate.getDay();
-        let dateKey = formatDate(currentDate);
+        let dateKey = currentDate.toISOString().split('T')[0]; // Format as yyyy-mm-dd
 
         if (currentDate.getDate() === 1 && currentDate.getMonth() !== currentMonth) {
             workingDaysCell.textContent = workingDaysCount;
@@ -128,14 +159,9 @@ function generateTable() {
     tableBody.appendChild(row);
 }
 
-function getHolidayDates(inputId) {
-    let input = document.getElementById(inputId).value;
-    return new Set(input.split(',').map(date => date.trim()).filter(date => date !== ""));
-}
-
 function addDateRangeToSet(start, end, set) {
     while (start <= end) {
-        set.add(formatDate(start));
+        set.add(start.toISOString().split('T')[0]); // Format as yyyy-mm-dd
         start.setDate(start.getDate() + 1);
     }
 }
@@ -144,10 +170,7 @@ function isSecondSaturday(date) {
     return date.getDay() === 6 && Math.ceil(date.getDate() / 7) === 2;
 }
 
-function formatDate(date) {
-    return date.toLocaleDateString('en-GB').split('/').join('/');
-}
-
+// Function to count total working days
 function countWorkingDays() {
     const workingDaysCells = document.querySelectorAll("#calendar tbody td:nth-child(2)");
     let totalWorkingDays = 0;
@@ -157,12 +180,14 @@ function countWorkingDays() {
     alert(`Total Working Days: ${totalWorkingDays}`);
 }
 
+// Function to download the table as Excel (.xlsx)
 function downloadExcel() {
     const table = document.getElementById("calendar");
     const workbook = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
     XLSX.writeFile(workbook, "Academic_Calendar.xlsx");
 }
 
+// Function to download the table as PDF
 function downloadPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF("landscape");
@@ -203,4 +228,58 @@ function downloadPDF() {
     });
 
     doc.save("Academic_Calendar.pdf");
+}
+
+function downloadWeekAndWorkingDaysExcel() {
+    const table = document.getElementById("calendar");
+    const rows = table.querySelectorAll("tbody tr");
+    const data = [];
+
+    // Extract Week No and Working Days
+    rows.forEach(row => {
+        const weekNoCell = row.querySelector("td:nth-child(1)");
+        const workingDaysCell = row.querySelector("td:nth-child(2)");
+
+        if (weekNoCell && workingDaysCell) {
+            const weekNo = weekNoCell.textContent.trim();
+            const workingDays = parseInt(workingDaysCell.textContent.trim(), 10);
+
+            // Only add rows where Week No and Working Days are valid
+            if (weekNo && !isNaN(workingDays)) {
+                data.push({ weekNumber: weekNo, workingDays: workingDays });
+            }
+        }
+    });
+
+    // Remove duplicates where 'Working Days' is 0
+    const uniqueData = [];
+    const seenWeeks = new Set();
+
+    data.forEach(row => {
+        if (!seenWeeks.has(row.weekNumber)) {
+            // If the week number is not seen before, add it to the uniqueData array
+            uniqueData.push(row);
+            seenWeeks.add(row.weekNumber); // Mark this week number as seen
+        } else {
+            // If the week number is already seen, check if the existing entry has 0 working days
+            const existingRowIndex = uniqueData.findIndex(item => item.weekNumber === row.weekNumber);
+            if (existingRowIndex !== -1) {
+                // If the existing entry has 0 working days, replace it with the new row
+                if (uniqueData[existingRowIndex].workingDays === 0 && row.workingDays !== 0) {
+                    uniqueData[existingRowIndex] = row; // Replace with the new row
+                }
+                // If both the existing and new rows have 0 working days, do nothing (keep the existing row)
+            }
+        }
+    });
+
+    // Convert to worksheet
+    const ws = XLSX.utils.json_to_sheet(uniqueData);
+
+    // Create workbook and append worksheet
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Week Data");
+
+    // Trigger download
+    XLSX.writeFile(wb, "Week_WorkingDays.xlsx");
 }

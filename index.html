@@ -5,43 +5,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Academic Calendar</title>
     <link rel="stylesheet" href="styles.css">
+
 </head>
 <body>  
+
     <h2>Academic Calendar</h2>
 
     <form onsubmit="generateTable(); return false;">
-        <label>Academic Start Date:</label>
-        <input type="date" id="startDate" value="2024-06-01" required>
-
-        <label>Academic End Date:</label>
-        <input type="date" id="endDate" value="2025-05-31" required>
-
-        <br><br>
-
-        <label>Dussehra Start Date:</label>
-        <input type="date" id="dussehraStart" value="2024-10-10">
-        
-        <label>Dussehra End Date:</label>
-        <input type="date" id="dussehraEnd" value="2024-10-14">
-
-        <br><br>
-
-        <label>Pongal Start Date:</label>
-        <input type="date" id="pongalStart" value="2025-01-13">
-        
-        <label>Pongal End Date:</label>
-        <input type="date" id="pongalEnd" value="2025-01-16">
-
-        <br><br>
-
-        <label>Other Local Holidays (DD/MM/YYYY, comma-separated):</label>
-        <input type="text" id="localHolidays" value="15/08/2024,02/10/2024,01/01/2025,26/01/2025">
-
-        <br><br>
-        <div class="buttons">  <button type="submit">Generate Calendar</button></div>
-      
+        <div class="form-row">
+            <label>Academic Start Date:</label>
+            <input type="date" id="startDate" value="2024-06-01" required>
+    
+            <label>Academic End Date:</label>
+            <input type="date" id="endDate" value="2025-05-31" required>
+        </div>
+    
+        <div class="form-row">
+            <label>Dussehra Start Date:</label>
+            <input type="date" id="dussehraStart" value="2024-10-10">
+    
+            <label>Dussehra End Date:</label>
+            <input type="date" id="dussehraEnd" value="2024-10-14">
+        </div>
+    
+        <div class="form-row">
+            <label>Sankranti Start Date:</label>
+            <input type="date" id="pongalStart" value="2025-01-13">
+    
+            <label>Sankranti End Date:</label>
+            <input type="date" id="pongalEnd" value="2025-01-16">
+        </div>
+    
+        <div class="form-row">
+            <label>Upload Other Holidays:</label>
+            <input type="file" id="localHolidaysFile" accept=".xlsx, .xls">
+        </div>
+        <div class="buttons">
+            <button type="submit" style="display: block; margin: 0 auto;">Generate Calendar</button>
+        </div>
     </form>
-
+    
     <table id="calendar">
         <thead>
             <tr>
@@ -63,14 +66,56 @@
         <button onclick="countWorkingDays()">Count Working Days</button>
         <button onclick="downloadExcel()">Download as Excel (.xlsx)</button>
         <button onclick="downloadPDF()">Download as PDF</button>
+        <button onclick="downloadWeekAndWorkingDaysExcel()">Download Week & Working Days Excel</button>
     </div>
 
-    <!-- External Libraries -->
+    <div class="help-section">
+        <div class="help-header" onclick="toggleHelp()">
+            <h3>Help & Instructions</h3>
+            <span id="helpIcon">▼</span>
+        </div>
+        <div class="help-content" id="helpContent">
+            <p>Welcome to the <strong>Academic Calendar Generator</strong>! Follow these steps:</p>
+            <ol>
+                <li><strong>Step 1:</strong> Enter the <strong>Academic Start Date</strong> and <strong>Academic End Date</strong>.</li>
+                <li><strong>Step 2:</strong> Define holidays like <strong>Dussehra</strong> and <strong>Sankranti </strong>.</li>
+                <li><strong>Step 3:</strong> Upload an <strong>Excel file</strong> for Other holidays. Make sure to enter Other holidays in <strong>Column 1</strong> of the Excel file in the format <strong>(dd/mm/yyyy)</strong>.</li>
+                <li><strong>Step 4:</strong> Click <strong>Generate Calendar</strong>.</li>
+                <li><strong>Step 5:</strong> Use options to calculate working days or download the calendar.</li>
+            </ol>
+            <p>Need help? <a href="https://mail.google.com/mail/?view=cm&fs=1&to=lokanadhamlohith7@gmail.com" target="_blank">Contact Support</a>.</p>
+
+
+        </div>
+    </div>
+
+    
+
+</div>
+
+
+<script>
+    function toggleHelp() {
+        var helpContent = document.getElementById("helpContent");
+        var helpIcon = document.getElementById("helpIcon");
+        if (helpContent.style.display === "none" || helpContent.style.display === "") {
+            helpContent.style.display = "block";
+            helpIcon.textContent = "▲";
+        } else {
+            helpContent.style.display = "none";
+            helpIcon.textContent = "▼";
+        }
+    }
+</script>
+
+
+    <!-- Include SheetJS for Excel export and import -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Include jsPDF for PDF export -->   
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-
-    <!-- External JavaScript File -->
+    <!-- Include custom JavaScript -->
     <script src="script.js"></script>
-</body>
+
+</body> 
 </html>
